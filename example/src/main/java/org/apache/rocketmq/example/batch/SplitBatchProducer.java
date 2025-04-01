@@ -17,14 +17,15 @@
 
 package org.apache.rocketmq.example.batch;
 
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.common.message.Message;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
-import org.apache.rocketmq.client.producer.SendResult;
-import org.apache.rocketmq.common.message.Message;
 
 public class SplitBatchProducer {
 
@@ -91,6 +92,7 @@ class ListSplitter implements Iterator<List<Message>> {
                 //here just let it go, otherwise it will block the splitting process
                 if (nextIndex - currIndex == 0) {
                     //if the next sublist has no element, add this one and then break, otherwise just break
+                    // 若单个消息超过 SIZE_LIMIT，仍将其单独放入子列表
                     nextIndex++;
                 }
                 break;
