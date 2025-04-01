@@ -39,9 +39,13 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * RocketMQ 定时消息消费者 功能：测量消息从计划投递时间到实际消费时间的延迟性能指标。
+ */
 public class TimerConsumer {
     private final String topic;
 
+    // 周期性记录快照并输出统计结果（TPS、延迟分位数等）
     private final ScheduledExecutorService scheduledExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryImpl("ConsumerScheduleThread_"));
 
     private final StatsBenchmarkConsumer statsBenchmark = new StatsBenchmarkConsumer();
@@ -66,6 +70,7 @@ public class TimerConsumer {
     }
 
     public void startScheduleTask() {
+        // 每 1 秒记录当前时间戳、总消费次数和总延迟时间到 snapshotList，保留最近 10 条快照用于计算 TPS
         scheduledExecutor.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -120,6 +125,7 @@ public class TimerConsumer {
     public void start() throws MQClientException {
         consumer.subscribe(topic, "*");
 
+        // 消息监听并计算延迟 MessageListenerConcurrently 隐含并发，其线程数由  RocketMQ 客户端控制
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
@@ -161,11 +167,14 @@ public class TimerConsumer {
     }
 
 
+    /**
+     * 性能统计内部类: 记录消费次数、总延迟时间及延迟分布
+     */
     public static class StatsBenchmarkConsumer {
-        private final AtomicLong receiveMessageTotalCount = new AtomicLong(0L);
+        private final AtomicLong receiveMessageTotalCount = new AtomicLong(0L);     // 总消费次数
 
-        private final AtomicLong delayedDurationMsTotal = new AtomicLong(0L);
-        private final ConcurrentSkipListSet<Long> delayedDurationMsSet = new ConcurrentSkipListSet<>();
+        private final AtomicLong delayedDurationMsTotal = new AtomicLong(0L);       // 总延迟时间
+        private final ConcurrentSkipListSet<Long> delayedDurationMsSet = new ConcurrentSkipListSet<>(); // 延迟分布集合（使用 ConcurrentSkipListSet 存储延迟时间，支持高并发写入和有序查询）
 
         public Long[] createSnapshot() {
             return new Long[]{
