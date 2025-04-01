@@ -21,6 +21,9 @@ import org.apache.rocketmq.acl.common.AclClientRPCHook;
 import org.apache.rocketmq.acl.common.SessionCredentials;
 import org.apache.rocketmq.remoting.RPCHook;
 
+/**
+ * AclClient 类是 RocketMQ 客户端用于实现访问控制列表（ACL）认证的工具类，其核心功能是通过生成 RPCHook 实例，为 RocketMQ 的 RPC 通信添加安全校验逻辑
+ */
 public class AclClient {
 
     public static final String ACL_ACCESS_KEY = "rocketmq2";
@@ -31,7 +34,16 @@ public class AclClient {
         return getAclRPCHook(ACL_ACCESS_KEY, ACL_SECRET_KEY);
     }
 
+    /**
+     * AclClientRPCHook 是 RocketMQ 提供的实现类，用于在 RPC 请求前后插入安全校验逻辑
+     * 例如：在发送请求前生成签名，并将签名、访问密钥等信息添加到请求头中，供服务端验证客户端身份
+     *
+     * @param ak
+     * @param sk
+     * @return
+     */
     public static RPCHook getAclRPCHook(String ak, String sk) {
+        // 将密钥信息封装到 SessionCredentials 对象并创建 AclClientRPCHook 实例
         return new AclClientRPCHook(new SessionCredentials(ak, sk));
     }
 }
