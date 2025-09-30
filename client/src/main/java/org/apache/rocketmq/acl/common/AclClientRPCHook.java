@@ -30,6 +30,12 @@ public class AclClientRPCHook implements RPCHook {
         this.sessionCredentials = sessionCredentials;
     }
 
+    /**
+     * 基于 SessionCredentials 中的密钥生成签名，并将 signature、accessKey 等字段添加到请求的扩展属性中
+     *
+     * @param remoteAddr
+     * @param request
+     */
     @Override
     public void doBeforeRequest(String remoteAddr, RemotingCommand request) {
         // Add AccessKey and SecurityToken into signature calculating.
